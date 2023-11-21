@@ -15,6 +15,8 @@ function roundOffNumber(number) {
   }
 }
 
+// question paper generation using only difficulty distribution
+
 const generateQuestionPaperOnlyDifficulty = (
   totalMarks,
   difficultyDistribution
@@ -53,6 +55,8 @@ const generateQuestionPaperOnlyDifficulty = (
   return paper;
 };
 
+// question paper generation using subject and difficulty distribution
+
 const generateQuestionPaper = (
   totalMarks,
   difficultyDistribution,
@@ -85,6 +89,7 @@ const generateQuestionPaper = (
     let difficultyCountLeft = countDistributionDifficulty[keysArray[i]];
     for (subject in subjectDistribution) {
       console.log(subject);
+      // take the minimum of left and required questions
       const subjectCount = Math.min(
         roundOffNumber(
           (countDistributionDifficulty[keysArray[i]] *

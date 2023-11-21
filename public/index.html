@@ -12,6 +12,10 @@
     <input type="number" id="total_marks" min="20" max="500" step="10">
     <br>
     <br>
+    <h3>Easy - 5 marks, Medium - 10 marks, Hard - 15 marks</h3>
+    <h3 style="color: red">For a better question paper generation please change percentage value using increment and
+        decrement button not
+        maually because they set their step size accourding to the total marks value.</h3>
     <h4>Distribution of difficulty</h4>
     <label for=" easyPercent">Percentage of Easy questions</label>
     <input type="number" id="easyPercent" name="incrementByTen" step="5" min="0" max="100">
@@ -28,6 +32,7 @@
     <input type="checkbox" id="subjectBoolean" onclick="checkBoxClick(this)"> <label for="subjectBoolean">Based on
         subject</label>
     <br>
+
     <div id="subjectDiv" style="display: none">
 
         <h4>Distribution of Subject</h4>
@@ -42,12 +47,16 @@
     <button id="" style="margin-top: 20px; padding:5px; cursor: pointer;" onclick="formHandler()">Generate
         Paper</button>
 
-    <div id="generated_paper">
-
+    <div id="generated_paper" style="display: flex;">
+        <div id="normal_text" style="width: 50%"></div>
+        <div id="json_value" style="width: 50%">
+            <button id="copy_btn" onclick="copyJSON()">Copy JSON</button>
+        </div>
     </div>
 </body>
 
 <script>
+    // check if checkBox is checked to display subject div
     const checkBoxClick = (checkbox) => {
         if (checkbox.checked) {
             document.getElementById("subjectDiv").style.display = "block";
@@ -56,34 +65,7 @@
             document.getElementById("subjectDiv").style.display = "none"
         }
     }
-    // const formHandler = (e) => {
-    //     const totalMarks = document.getElementById("total_marks").value;
-    //     let difficultyDistribution = {
-    //         Easy: document.getElementById("easyPercent").value,
-    //         Medium: document.getElementById("mediumPercent").value,
-    //         Hard: document.getElementById("hardPercent").value,
-    //     }
-    //     let subjectDistribution = {};
-    //     if (document.getElementById("subjectBoolean").checked) {
-    //         subjectDistribution["Physics"] = document.getElementById("physicsPercent").value
-    //         subjectDistribution["Chemistry"] = document.getElementById("chemistryPercent").value
-    //     }
-    //     var apiUrl = 'http://localhost:3000/generate-question-paper';
-    //     const postData = {
-    //         totalMarks,
-    //         difficultyDistribution,
-    //         subjectDistribution
-    //     }
-    //     const paper = fetch(apiUrl, {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify(postData),
-    //     })
 
-    //     console.log(paper)
-    // }
     let diviser;
     const input = document.getElementById("total_marks")
     input.addEventListener("input", (e) => {
@@ -93,8 +75,14 @@
         document.getElementById("mediumPercent").step = 10 / diviser;
         document.getElementById("hardPercent").step = 15 / diviser;
     })
+    // copy to clipboard the questions as json
+    const copyJSON = () => {
+        const value = document.getElementById("json_value").innerText.split("\n")[2];
+        navigator.clipboard.writeText(value)
+    }
+
+    // form submit handler
     const formHandler = () => {
-        // Prevent the default form submission behavior
 
         const totalMarks = document.getElementById("total_marks").value;
 
@@ -103,10 +91,21 @@
             Medium: document.getElementById("mediumPercent").value,
             Hard: document.getElementById("hardPercent").value,
         }
+        let sumPercentDiff = 0;
+        let sumPercentSub = 0;
+
+        for (diff in difficultyDistribution) {
+            sumPercentDiff += Number(difficultyDistribution[diff]);
+            console.log(sumPercentDiff)
+        }
         let subjectDistribution = {};
         if (document.getElementById("subjectBoolean").checked) {
             subjectDistribution["Physics"] = document.getElementById("physicsPercent").value
             subjectDistribution["Chemistry"] = document.getElementById("chemistryPercent").value
+
+            for (subject in subjectDistribution) {
+                sumPercentSub += Number(subjectDistribution[subject]);
+            }
         }
 
         var apiUrl = 'http://localhost:3000/generate-question-paper';
@@ -115,40 +114,47 @@
             difficultyDistribution,
             subjectDistribution
         }
-        console.log("hi")
         let paper = [];
-        fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(postData),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json(); // Assuming the response is in JSON format
+        let checkBoxValue = document.getElementById("subjectBoolean").checked
+        const submitFormBoolean = checkBoxValue ? (sumPercentDiff == 100 && sumPercentSub == 100) : (sumPercentDiff == 100)
+        console.log(sumPercentDiff)
+        if (submitFormBoolean) {
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(postData),
             })
-            .then(data => {
-                console.log('Data received:', data.questionPaper);
-                paper = data.questionPaper;
-                document.getElementById("generated_paper").innerHTML = ""
-                for (const [index, question] of paper.entries()) {
-                    const div = document.createElement('div');
-                    div.innerHTML = `
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Assuming the response is in JSON format
+                })
+                .then(data => {
+                    console.log('Data received:', data.questionPaper);
+                    paper = data.questionPaper;
+                    document.getElementById("normal_text").innerHTML = ""
+                    document.getElementById("json_value").innerHTML = `<button id="copy_btn" onclick="copyJSON()">Copy JSON</button>`
+                    document.getElementById("json_value").innerHTML += `<h3>JSON Value</h3> ${JSON.stringify(paper)}`
+                    for (const [index, question] of paper.entries()) {
+                        const div = document.createElement('div');
+                        div.innerHTML = `
                      <h4>Question${index + 1} = ${question.question}</h4>
                      <p>Difficulty = ${question.difficulty}</p> 
                      <p>Subject = ${question.subject}</p> 
                      <p>Marks = ${question.marks}</p> 
                      <p>Topic = ${question.topic}</p> 
                     `;
-                    document.getElementById("generated_paper").appendChild(div);
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-            });
+                        document.getElementById("normal_text").appendChild(div);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+        }
+
     }
 
 </script>
