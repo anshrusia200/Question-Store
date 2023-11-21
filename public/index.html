@@ -43,11 +43,11 @@
 
         <h4>Distribution of Subject</h4>
         <label for="physicsPercent">Percentage of Physics questions</label>
-        <input type="number" id="physicsPercent" name="incrementByTen" min="0" max="100">
+        <input type="number" id="physicsPercent" name="incrementByTen" min="0" max="100" step="10">
         <br>
         <br>
         <label for="chemistryPercent">Percentage of Chemistry questions</label>
-        <input type="number" id="chemistryPercent" name="incrementByTen" min="0" max="100">
+        <input type="number" id="chemistryPercent" name="incrementByTen" min="0" max="100" step="10">
         <br>
     </div>
     <button id="" style="margin-top: 20px; padding:5px; cursor: pointer;" onclick="formHandler()">Generate
@@ -69,14 +69,15 @@
         }
         else {
             document.getElementById("subjectDiv").style.display = "none"
+            subjectDistribution = {}
         }
     }
 
     let diviser;
     const input = document.getElementById("total_marks")
+    // onchange eventlistener on the total marks input to change the step size of the percentage setters
     input.addEventListener("input", (e) => {
         diviser = e.target.value / 100;
-        console.log(diviser)
         document.getElementById("easyPercent").step = 5 / diviser;
         document.getElementById("mediumPercent").step = 10 / diviser;
         document.getElementById("hardPercent").step = 15 / diviser;
@@ -86,7 +87,7 @@
         const value = document.getElementById("json_value").innerText.split("\n")[2];
         navigator.clipboard.writeText(value)
     }
-
+    let subjectDistribution = {};
     // form submit handler
     const formHandler = () => {
 
@@ -102,9 +103,8 @@
 
         for (diff in difficultyDistribution) {
             sumPercentDiff += Number(difficultyDistribution[diff]);
-            console.log(sumPercentDiff)
         }
-        let subjectDistribution = {};
+
         if (document.getElementById("subjectBoolean").checked) {
             subjectDistribution["Physics"] = document.getElementById("physicsPercent").value
             subjectDistribution["Chemistry"] = document.getElementById("chemistryPercent").value
@@ -123,7 +123,6 @@
         let paper = [];
         let checkBoxValue = document.getElementById("subjectBoolean").checked
         const submitFormBoolean = checkBoxValue ? (sumPercentDiff == 100 && sumPercentSub == 100) : (sumPercentDiff == 100)
-        console.log(sumPercentDiff)
         if (submitFormBoolean) {
             fetch(apiUrl, {
                 method: 'POST',
