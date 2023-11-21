@@ -19,6 +19,7 @@ app.post("/generate-question-paper", async (req, res) => {
   const { totalMarks, difficultyDistribution, subjectDistribution } = req.body;
 
   try {
+    // if option to divide subjects is not chosen we go with only difficulty distribution
     const questionPaper =
       Object.keys(subjectDistribution).length === 0
         ? questionPaperGenerator.generateQuestionPaperOnlyDifficulty(
